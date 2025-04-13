@@ -1,12 +1,15 @@
 import 'dart:io';
 
   import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class EpubContentViewer extends StatelessWidget {
   final String htmlFilePath;
+  final String a;
 
-  const EpubContentViewer({super.key, required this.htmlFilePath});
+  const EpubContentViewer({super.key, required this.htmlFilePath, required this.a});
 
   @override
   Widget build(BuildContext context) {
@@ -40,9 +43,23 @@ class EpubContentViewer extends StatelessWidget {
             return SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: Html(data: htmlContent),
-              ),
+                child:  Html(
+                  data: htmlContent,
+                  onLinkTap: (url, _, __) {
+                    if (url == null) return;
+                    final uri = Uri.parse(url);
+                    print(uri);
+                    launchUrl(uri, mode: LaunchMode.externalApplication)
+                        .catchError((e) {
+                      debugPrint("Không mở được link: $e");
+                      return false;
+                    });
+                  },
+                )
+              )
+
             );
+
           }
       ),
     );

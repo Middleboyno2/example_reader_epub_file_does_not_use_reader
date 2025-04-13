@@ -28,6 +28,7 @@ dependencies:
   flutter_html: any
   webview_flutter_android: any
   webview_flutter: any
+  url_launcher:
 
 
 

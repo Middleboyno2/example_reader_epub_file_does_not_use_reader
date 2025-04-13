@@ -63,13 +63,14 @@ class _EpubCoverScreenState extends State<EpubCoverScreen> {
       for (var section in sections) {
         final href = section.content.href; // ví dụ: Text/p001.xhtml
         final filename = href.split('/').last;
+        final name = section.content.fileName;
 
         final bytes = section.content.fileContent; // Uint8List
         final path = '${dir.path}/$filename';
         final file = File(path);
         await file.writeAsBytes(bytes);
 
-        chapterFiles.add({'title': filename, 'path': path});
+        chapterFiles.add({'title': name, 'path': path, 'section': section.toString()});
       }
 
 
@@ -110,10 +111,11 @@ class _EpubCoverScreenState extends State<EpubCoverScreen> {
             title: Text(chapter['title'] ?? 'Chương'),
             onTap: () {
               final htmlFilePath = chapter['path']!;
+              final a = chapter['section'];
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => EpubContentViewer(htmlFilePath: htmlFilePath),
+                  builder: (_) => EpubContentViewer(htmlFilePath: htmlFilePath, a: a! ,),
                 ),
               );
             },
