@@ -1,11 +1,10 @@
 import 'dart:io';
-import 'package:example_reader_epub/web_view.dart';
+import 'package:example_reader_epub/f.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:epub_decoder/epub_decoder.dart';
 import 'package:path_provider/path_provider.dart';
-
-import 'ex.dart';
+import 'f3.dart';
 
 class EpubCoverScreen extends StatefulWidget {
   const EpubCoverScreen({super.key});
@@ -38,16 +37,15 @@ class _EpubCoverScreenState extends State<EpubCoverScreen> {
       title = epub.title;
       sections = epub.sections;
 
+      final dir = await getApplicationDocumentsDirectory();
       // Lấy ảnh bìa
       if (epub.cover != null) {
         final bytes = epub.cover!.fileContent;
 
         // Lưu ảnh vào thư mục app
-        final dir = await getApplicationDocumentsDirectory();
         final path = '${dir.path}/epub_cover.png';
         final file = File(path);
         await file.writeAsBytes(bytes);
-
         setState(() {
           coverPath = path;
         });
@@ -57,22 +55,16 @@ class _EpubCoverScreenState extends State<EpubCoverScreen> {
         });
       }
 
-      final dir = await getApplicationDocumentsDirectory();
-      epubExtractedDir = dir.path;
-
       for (var section in sections) {
-        final href = section.content.href; // ví dụ: Text/p001.xhtml
-        final filename = href.split('/').last;
-        final name = section.content.fileName;
 
+        final name = section.content.fileName;
         final bytes = section.content.fileContent; // Uint8List
-        final path = '${dir.path}/$filename';
+        final path = '${dir.path}/$name';
         final file = File(path);
         await file.writeAsBytes(bytes);
 
-        chapterFiles.add({'title': name, 'path': path, 'section': section.toString()});
+        chapterFiles.add({'title': name, 'path': path});
       }
-
 
       setState(() {
         coverPath = '${dir.path}/epub_cover.png';
@@ -102,6 +94,17 @@ class _EpubCoverScreenState extends State<EpubCoverScreen> {
           const SizedBox(height: 10),
           Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           const Divider(),
+          ElevatedButton(
+            onPressed: (){
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EpubContentViewer3(listHtmlFilePath: chapterFiles,),
+                ),
+              );
+            },
+            child: Text('read full')
+          ),
 
           const Text("Danh sách chương:", style: TextStyle(fontSize: 16)),
           const SizedBox(height: 8),
@@ -111,11 +114,10 @@ class _EpubCoverScreenState extends State<EpubCoverScreen> {
             title: Text(chapter['title'] ?? 'Chương'),
             onTap: () {
               final htmlFilePath = chapter['path']!;
-              final a = chapter['section'];
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => EpubContentViewer(htmlFilePath: htmlFilePath, a: a! ,),
+                  builder: (_) => RawHtmlViewer(htmlFilePath: htmlFilePath ,),
                 ),
               );
             },

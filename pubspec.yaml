@@ -17,7 +17,8 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   epubx: ^4.0.0
-  vocsy_epub_viewer: any
+  # Lỗi bạn gặp trong Flutter khi dùng plugin vocsy_epub_viewer xuất phát từ việc plugin này vẫn đang sử dụng API Flutter Android cũ (dựa trên PluginRegistry.Registrar), trong khi Flutter hiện nay yêu cầu plugin phải hỗ trợ Android embedding v2 (giao diện mới).
+  # vocsy_epub_viewer: ^3.0.0
   epub_decoder: ^0.1.4
   permission_handler: any
   html: ^0.15.0
@@ -29,8 +30,10 @@ dependencies:
   webview_flutter_android: any
   webview_flutter: any
   url_launcher:
-
-
+  uuid:
+  shared_preferences:
+  flutter_tts:
+  visibility_detector: ^0.4.0+2
 
 dev_dependencies:
   flutter_test:

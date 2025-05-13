@@ -5,28 +5,29 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class EpubContentViewer extends StatefulWidget {
-  final String htmlFilePath;
+class EpubContentViewer2 extends StatefulWidget {
+  final List<Map<String, String>> listHtmlFilePath;
 
 
-  const EpubContentViewer({super.key, required this.htmlFilePath});
+  const EpubContentViewer2({super.key, required this.listHtmlFilePath});
 
   @override
-  State<EpubContentViewer> createState() => _EpubContentViewerState();
+  State<EpubContentViewer2> createState() => _EpubContentViewer2State();
 }
 
-class _EpubContentViewerState extends State<EpubContentViewer> {
+class _EpubContentViewer2State extends State<EpubContentViewer2> {
   final List<String> b = [];
   String _selectedContent = "";
   String _plainText = "";
-  String _htmlContent = "";
+  final List<String> _htmlContent = [];
   bool _isLoading = true;
   FlutterTts flutterTts = FlutterTts();
 
   @override
   void initState() {
     super.initState();
-    loadHtmlContent();
+    //loadHtmlContent();
+    loadAllContent();
   }
 
   void addMarkdown(String value) {
@@ -70,10 +71,16 @@ class _EpubContentViewerState extends State<EpubContentViewer> {
     await flutterTts.speak(text);
   }
 
-  Future<void> loadHtmlContent() async {
-    try {
-      final rawHtml = await File(widget.htmlFilePath).readAsString();
+  Future<void> loadAllContent() async{
+    final listHtml = widget.listHtmlFilePath;
+    for(var i = 0; i < listHtml.length; i++){
+      loadHtmlContent(listHtml[i]['path']!);
+    }
+  }
 
+  Future<void> loadHtmlContent(String htmlFilePath) async {
+    try {
+      final rawHtml = await File(htmlFilePath).readAsString();
       // Tách phần thân từ <body> nếu có
       String htmlContent = rawHtml;
       print("RAW HTML:\n$rawHtml");
@@ -89,14 +96,14 @@ class _EpubContentViewerState extends State<EpubContentViewer> {
 
       setState(() {
         _plainText = plainText;
-        _htmlContent = htmlContent;
+        _htmlContent.add(htmlContent);
         _isLoading = false;
       });
     } catch (e) {
       print('Lỗi load HTML: $e');
       setState(() {
         _plainText = 'Không đọc được nội dung';
-        _htmlContent = '';
+        // _htmlContent = '';
         _isLoading = false;
       });
     }
@@ -151,17 +158,33 @@ class _EpubContentViewerState extends State<EpubContentViewer> {
                 ],
               );
             },
-            child: Html(
-              data: _htmlContent,
-              onLinkTap: (url, _, __) {
-                if (url == null) return;
-                final uri = Uri.parse(url);
-                launchUrl(uri, mode: LaunchMode.externalApplication).catchError((e) {
-                  debugPrint("Không mở được link: $e");
-                  return false;
-                });
-              },
-            ),
+              child: Column(
+                children: [
+                  for ( var i in _htmlContent)
+                    Html(
+                      data: i,
+                      onLinkTap: (url, _, __) {
+                        if (url == null) return;
+                        final uri = Uri.parse(url);
+                        launchUrl(uri, mode: LaunchMode.externalApplication).catchError((e) {
+                          debugPrint("Không mở được link: $e");
+                          return false;
+                        });
+                      },
+                    ),
+                ],
+              ),
+            // child: Html(
+            //   data: _htmlContent,
+            //   onLinkTap: (url, _, __) {
+            //     if (url == null) return;
+            //     final uri = Uri.parse(url);
+            //     launchUrl(uri, mode: LaunchMode.externalApplication).catchError((e) {
+            //       debugPrint("Không mở được link: $e");
+            //       return false;
+            //     });
+            //   },
+            // ),
           ),
         ),
       ),

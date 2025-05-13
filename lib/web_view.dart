@@ -13,8 +13,8 @@ class EpubContent extends StatefulWidget {
 }
 
 class _EpubContentViewerState extends State<EpubContent> {
-  late final WebViewController _controller;
-
+  late WebViewController _controller;
+  String rawHtml = '';
   @override
   void initState() {
     super.initState();
@@ -23,10 +23,15 @@ class _EpubContentViewerState extends State<EpubContent> {
       WebViewPlatform.instance = AndroidWebViewPlatform();
     }
 
-    // ⚙️ Khởi tạo controller WebView
+    //Khởi tạo controller WebView
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..loadFile(widget.htmlFilePath);
+    loadContent();
+  }
+  void loadContent() async{
+    rawHtml = await File(widget.htmlFilePath).readAsString();
+    print(rawHtml);
   }
 
   @override
