@@ -1,5 +1,8 @@
 import 'dart:io';
+import 'package:example_reader_epub/ex.dart';
 import 'package:example_reader_epub/f.dart';
+import 'package:example_reader_epub/web_view.dart';
+import 'package:example_reader_epub/web_view_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:epub_decoder/epub_decoder.dart';
@@ -21,6 +24,7 @@ class _EpubCoverScreenState extends State<EpubCoverScreen> {
   List<Section> sections = [];
   late String epubExtractedDir;
   List<Map<String, String>> chapterFiles = [];
+  String allFile = '';
 
   @override
   void initState() {
@@ -99,7 +103,7 @@ class _EpubCoverScreenState extends State<EpubCoverScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => EpubContentViewer3(listHtmlFilePath: chapterFiles,),
+                  builder: (_) => EpubContent(listHtmlFilePath: chapterFiles, title: title,),
                 ),
               );
             },
@@ -117,7 +121,7 @@ class _EpubCoverScreenState extends State<EpubCoverScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => RawHtmlViewer(htmlFilePath: htmlFilePath ,),
+                  builder: (_) => EpubContent2(htmlFilePath: htmlFilePath ,),
                 ),
               );
             },

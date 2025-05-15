@@ -1,0 +1,1 @@
+/Users/apple/my project/example_reader_epub/build/app/intermediates/cxx/Debug/2q732492/obj/x86_64

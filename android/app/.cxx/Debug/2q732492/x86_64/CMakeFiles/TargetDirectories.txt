@@ -1,0 +1,2 @@
+/Users/apple/my project/example_reader_epub/android/app/.cxx/Debug/2q732492/x86_64/CMakeFiles/edit_cache.dir
+/Users/apple/my project/example_reader_epub/android/app/.cxx/Debug/2q732492/x86_64/CMakeFiles/rebuild_cache.dir

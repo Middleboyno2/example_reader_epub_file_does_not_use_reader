@@ -9,8 +9,9 @@ import 'package:visibility_detector/visibility_detector.dart';
 
 class EpubContentViewer3 extends StatefulWidget {
   final List<Map<String, String>> listHtmlFilePath;
+  final String title;
 
-  const EpubContentViewer3({super.key, required this.listHtmlFilePath});
+  const EpubContentViewer3({super.key, required this.listHtmlFilePath, required this.title});
 
   @override
   State<EpubContentViewer3> createState() => _EpubContentViewer3State();
@@ -24,12 +25,12 @@ class _EpubContentViewer3State extends State<EpubContentViewer3> {
   // Danh sách chứa nội dung HTML đã tải
   late List<String?> _htmlContent;
 
-  // Biến để theo dõi các section đang được xem
-  int _currentSection = 0;
-
   late ScrollController _scrollController;
 
   bool _isLoading = true;
+  double _readingProgress = 0.0;
+  int _currentSection = 0;
+  double _sectionProgress = 0.0;
   FlutterTts flutterTts = FlutterTts();
 
   @override
@@ -50,21 +51,27 @@ class _EpubContentViewer3State extends State<EpubContentViewer3> {
   Future<void> _loadInitialSections() async {
     setState(() => _isLoading = true);
     final prefs = await SharedPreferences.getInstance();
-    // if(prefs.getString('reading_progress_') == null){
-    // }
-    // Xác định các section cần tải ban đầu
-    final int startSection = 0;
-    final int endSection = (widget.listHtmlFilePath.length >= 3) ? 2 : widget.listHtmlFilePath.length - 1;
+    if(prefs.getDouble('reading_progress_${widget.title}') == null){
+      // Xác định các section cần tải ban đầu
+      final int startSection = 0;
+      await _loadSection(startSection);
 
-    // Tải các section ban đầu
-    for (int i = startSection; i <= endSection; i++) {
-      await _loadSection(i);
+      setState(() {
+        _currentSection = startSection;
+        _isLoading = false;
+      });
+    }else{
+      _readingProgress = prefs.getDouble('reading_progress_${widget.title}') ?? 0.0;
+      final sectionLocation = (_readingProgress * widget.listHtmlFilePath.length)/100;
+      final currentSection = sectionLocation.toInt() - 1;
+      final sectionProgress = sectionLocation - _currentSection;
+      await _loadSection(currentSection);
+      setState(() {
+        _currentSection = currentSection;
+        _sectionProgress = sectionProgress;
+        print('current section: $_currentSection, section progress: $_sectionProgress');
+      });
     }
-
-    setState(() {
-      _currentSection = startSection;
-      _isLoading = false;
-    });
   }
 
   Future<void> _loadSection(int index) async {
@@ -80,7 +87,6 @@ class _EpubContentViewer3State extends State<EpubContentViewer3> {
         final startTagEnd = rawHtml.indexOf('>', bodyStart) + 1;
         htmlContent = rawHtml.substring(startTagEnd, bodyEnd);
       }
-
       // Cập nhật plainText cho TTS (có thể chỉ lưu phần hiện tại hoặc ghép lại)
       // final plainText = extractTextFromHtml(rawHtml);
       // if (index == _currentSection) {
@@ -100,7 +106,6 @@ class _EpubContentViewer3State extends State<EpubContentViewer3> {
       });
     }
   }
-
   String extractTextFromHtml(String rawHtml) {
     if (rawHtml.isEmpty) return '';
 
@@ -149,10 +154,10 @@ class _EpubContentViewer3State extends State<EpubContentViewer3> {
       appBar: AppBar(
         title: const Text("Nội dung chương"),
         actions: [
+          Text('${(_sectionProgress*100)} %'),
           IconButton(
             icon: const Icon(Icons.more_vert),
             onPressed: () {
-              speak(_plainText);
             },
           )
         ],
@@ -194,23 +199,39 @@ class _EpubContentViewer3State extends State<EpubContentViewer3> {
           padding: const EdgeInsets.all(16),
           itemCount: widget.listHtmlFilePath.length,
           itemBuilder: (context, index) {
+            // _itemKeys.putIfAbsent(index, () => GlobalKey());
             return VisibilityDetector(
               key: Key('item-$index'),
               onVisibilityChanged: (VisibilityInfo info) {
-                if(info.visibleFraction > 0.9){
-                  _loadSection(index + 1);
-                  print('Hiện tại đa load section ${index + 1}');
-                }if(info.visibleFraction <0.1){
-                  _loadSection(index -1);
-                  print('Hiện tại đa load section ${index -1}');
+                if(info.visibleFraction >= 0.0){
+                  if(_htmlContent[index + 1] == null){
+                    _loadSection(index + 1);
+                    print('Hiện tại đa load section ${index + 1}');
+                  }
+                  if(_htmlContent[index - 1] == null && index !=0){
+                    _loadSection(index -1);
+                    print('Hiện tại đa load section ${index + 1}');
+                  }
+
+                }
+                if (info.visibleFraction > _sectionProgress) {
+                  setState(() {
+                    _currentSection = index;
+                    _sectionProgress = info.visibleFraction;
+                  });
                 }
               },
               child: _htmlContent[index] == null
-                  ? const Center(child: Padding(
-                padding: EdgeInsets.all(20),
-                child: CircularProgressIndicator(),
-              ))
+                  ? SizedBox(
+                height: 600,
+                child: const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: CircularProgressIndicator(),
+                    )),
+              )
                   : Html(
+                // key: _itemKeys[index],
                 data: _htmlContent[index]!,
                 onLinkTap: (url, _, __) {
                   if (url == null) return;

@@ -1,0 +1,44 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
+
+class EpubContent2 extends StatefulWidget {
+  final String htmlFilePath;
+
+  const EpubContent2({super.key, required this.htmlFilePath});
+
+  @override
+  State<EpubContent2> createState() => _EpubContentViewerState();
+}
+
+class _EpubContentViewerState extends State<EpubContent2> {
+  late WebViewController _controller;
+  String rawHtml = '';
+  @override
+  void initState() {
+    super.initState();
+
+    if (Platform.isAndroid) {
+      WebViewPlatform.instance = AndroidWebViewPlatform();
+    }
+
+    //Khởi tạo controller WebView
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..loadFile(widget.htmlFilePath);
+    loadContent();
+  }
+  void loadContent() async{
+    rawHtml = await File(widget.htmlFilePath).readAsString();
+    print(rawHtml);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Đọc chương EPUB')),
+      body: WebViewWidget(controller: _controller),
+    );
+  }
+}
